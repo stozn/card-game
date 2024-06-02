@@ -3,19 +3,18 @@ import Card from './card.js';
 export default class Dealer {
     constructor(scene) {
         this.scene = scene;
-        this.cardNum = 0;
-        this.cardType = ['artifact', 'disaster', 'gem'];
+        this.cardTypes = ['artifact', 'disaster', 'gem'];
     }
 
     dealCards() {
-        function sample(array) {
-            return array[Math.floor(Math.random() * array.length)];
+        let rand = (n) => {
+            return Math.floor(Math.random() * n);
         }
-        for (let i = 0; i < 6; i++) {
-            let curCard = new Card(this.scene);
-            let curSprite = sample(this.cardType) + '-' + (Math.floor(Math.random() * 4) + 1);
-            curCard.render(340 + i * 100, 375, curSprite);
+        let sample = (array) => {
+            return array[rand(array.length)];
         }
         
+        let curCard = new Card(this.scene, {type: sample(this.cardTypes), id: rand(6) + 1, value: rand(6)});
+        curCard.render(1000, 375);
     }
 }

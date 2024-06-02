@@ -2,8 +2,10 @@ import Game from "./src/game.js"
 
 const config = {
     type: Phaser.AUTO,
-    width: 1280,
-    height: 1024,
+    width: 1600,
+    height: 900,
+    backgroundColor: '#ffffff',
+    scaleMode: 1,
     scene: [
         Game
     ]

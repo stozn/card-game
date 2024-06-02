@@ -18,17 +18,10 @@ io.on('connection', function (socket) {
     console.log('A user connected: ' + socket.id);
 
     players.push(socket.id);
-
-    if (players.length === 1) {
-        io.emit('isPlayerA');
-    };
+    io.emit('addPlayer', socket.id);
 
     socket.on('dealCards', function () {
         io.emit('dealCards');
-    });
-
-    socket.on('cardPlayed', function (card, isPlayerA) {
-        io.emit('cardPlayed', card, isPlayerA);
     });
 
     socket.on('disconnect', function () {
@@ -38,7 +31,5 @@ io.on('connection', function (socket) {
 });
 
 server.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+    console.log(`服务器已启动在端口 ${port}`)
 })
-
-console.log('server loaded')

@@ -1,6 +1,5 @@
 import Card from './card.js';
 import Dealer from "./dealer.js";
-import Zone from './zone.js';
 
 export default class Game extends Phaser.Scene {
     constructor() {
@@ -10,12 +9,8 @@ export default class Game extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('cyanCardFront', 'assets/CyanCardFront.png');
-        this.load.image('cyanCardBack', 'assets/CyanCardBack.png');
-        this.load.image('magentaCardFront', 'assets/MagentaCardFront.png');
-        this.load.image('magentaCardBack', 'assets/MagentaCardBack.png');
-
         let self = this;
+        self.load.image('camp', 'assets/camp.png');
         function loadImages(dir, n) {
             for (let i = 1; i <= n; i++)
                 self.load.image(`${dir}-${i}`, `assets/${dir}/${i}.jpg`);
@@ -26,50 +21,37 @@ export default class Game extends Phaser.Scene {
     }
 
     create() {
-        this.dealer = new Dealer(this);
-
         let self = this;
-
+        this.add.image(300, 540, 'camp');
+        this.dealer = new Dealer(this);
         this.socket = io();
 
-        this.socket.on('connect', function () {
+        this.socket.on('connect', () => {
             console.log('Connected!');
         });
 
-        this.socket.on('isPlayerA', function () {
-            self.isPlayerA = true;
-        })
+        this.socket.on('addPlayer', (player) => {
+            console.log('A player joined: ' + player);
+        });
 
-        this.socket.on('dealCards', function () {
+
+        this.socket.on('dealCards', () => {
             self.dealer.dealCards();
-            self.dealText.disableInteractive();
+            // self.dealText.disableInteractive();
         })
 
-        this.socket.on('cardPlayed', function (card, isPlayerA) {
-            if (isPlayerA !== self.isPlayerA) {
-                let sprite = card.textureKey;
-                self.opponentCards.shift().destroy();
-                self.dropZone.data.list.cards++;
-                let playedCard = new Card(self);
-                playedCard.render(((self.dropZone.x - 350) + (self.dropZone.data.list.cards * 50)), (self.dropZone.y), sprite).disableInteractive();
-            }
-        })
+        self.box = this.add.graphics();
+        self.box.fillStyle(0xf0f040, 1);
+        self.box.strokeRoundedRect(720, 800, 160, 60);
+        self.box.fillRoundedRect(720, 800, 160, 60);
 
-        this.dealText = this.add.text(75, 350, ['发牌']);
-        this.dealText.setFontSize(18).setColor('#00ffff').setInteractive();
+        self.text = this.add.text(740, 810, "继续探险", { fontFamily: 'SimHei', fontSize: '32px', fill: '#000' });
+        self.text.setDepth(1);
+        self.text.setInteractive();
 
-        this.dealText.on('pointerdown', function () {
+        self.text.on('pointerdown', () => {
             self.socket.emit("dealCards");
-        })
-
-        this.dealText.on('pointerover', function () {
-            self.dealText.setColor('#ff69b4');
-        })
-
-        this.dealText.on('pointerout', function () {
-            self.dealText.setColor('#00ffff');
-        })
-
+        });
     }
 
     update() {
