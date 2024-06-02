@@ -10,4 +10,4 @@
 npm install
 node server.js
 ```
-浏览器打开 http://127.0.0.1:8080
+浏览器打开 http://127.0.0.1

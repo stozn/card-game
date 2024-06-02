@@ -2,23 +2,20 @@ import Card from './card.js';
 
 export default class Dealer {
     constructor(scene) {
-        this.dealCards = () => {
-            let playerSprite;
-            let opponentSprite;
-            if (scene.isPlayerA) {
-                playerSprite = 'cyanCardFront';
-                opponentSprite = 'magentaCardBack';
-            } else {
-                playerSprite = 'magentaCardFront';
-                opponentSprite = 'cyanCardBack';
-            };
-            for (let i = 0; i < 5; i++) {
-                let playerCard = new Card(scene);
-                playerCard.render(475 + (i * 100), 650, playerSprite);
+        this.scene = scene;
+        this.cardNum = 0;
+        this.cardType = ['artifact', 'disaster', 'gem'];
+    }
 
-                let opponentCard = new Card(scene);
-                scene.opponentCards.push(opponentCard.render(475 + (i * 100), 125, opponentSprite).disableInteractive());
-            }
+    dealCards() {
+        function sample(array) {
+            return array[Math.floor(Math.random() * array.length)];
         }
+        for (let i = 0; i < 6; i++) {
+            let curCard = new Card(this.scene);
+            let curSprite = sample(this.cardType) + '-' + (Math.floor(Math.random() * 4) + 1);
+            curCard.render(340 + i * 100, 375, curSprite);
+        }
+        
     }
 }
