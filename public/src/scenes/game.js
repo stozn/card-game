@@ -22,7 +22,7 @@ export default class Game extends Phaser.Scene {
                 self.load.image(`${dir}-${i}`, `assets/${dir}/${i}.jpg`);
         }
         loadImages('artifact', 6);
-        loadImages('disaster', 6);
+        loadImages('disaster', 5);
         loadImages('gem', 4);
     }
 
@@ -47,11 +47,12 @@ export default class Game extends Phaser.Scene {
         let { box, text } = render.drawTextBox("冒险翻开的卡", '#000', 28, 35, 27, 207, 295, 3, 0xa2a2a2);
         // text.setDepth(1);
 
-        render.drawTextBox("陷阱A", '#000', 28, 264, 27, 119, 53, 3, 0xd43a3a);
-        render.drawTextBox("陷阱B", '#000', 28, 264, 86, 119, 53, 3, 0xcecece);
-        render.drawTextBox("陷阱C", '#000', 28, 264, 146, 119, 53, 3, 0xcecece);
-        render.drawTextBox("陷阱D", '#000', 28, 264, 205, 119, 53, 3, 0xd43a3a);
-        render.drawTextBox("陷阱E", '#000', 28, 264, 265, 119, 53, 3, 0xcecece);
+        let { boxA, textA } = render.drawTextBox("陷阱A", '#000', 28, 264, 27, 119, 53, 3, 0xd43a3a);
+        let { boxB, textB } = render.drawTextBox("陷阱B", '#000', 28, 264, 86, 119, 53, 3, 0xcecece);
+        let { boxC, textC } = render.drawTextBox("陷阱C", '#000', 28, 264, 146, 119, 53, 3, 0xcecece);
+        let { boxD, textD } = render.drawTextBox("陷阱D", '#000', 28, 264, 205, 119, 53, 3, 0xcecece);
+        let { boxE, textE } = render.drawTextBox("陷阱E", '#000', 28, 264, 265, 119, 53, 3, 0xcecece);
+
 
         render.drawTextBox("公共区", '#000', 32, 35, 337, 348, 203, 3, 0xd1f3db);
         render.drawBox(435, 27, 574, 365, 7, 0xc5e8fb);
@@ -71,7 +72,7 @@ export default class Game extends Phaser.Scene {
         });
 
         let message = '';
-        let input = render.drawInput(1094, 695, 400, 63, 22, 'textarea').on('textchange', (input) => {
+        let input = render.drawInput(1080, 695, 400, 63, 22, 'textarea').on('textchange', (input) => {
             message = input.text;
         });
 
@@ -80,7 +81,7 @@ export default class Game extends Phaser.Scene {
             console.log("send " + self.username + ':' + message);
         }
 
-        render.drawTextBox("发送", '#000', 28, 1500, 705, 70, 50, 13, 0x79df49, null, null, 'pointerdown', sendMessage);
+        render.drawTextBox("发送", '#000', 28, 1490, 705, 70, 50, 13, 0x79df49, null, null, 'pointerdown', sendMessage);
 
         self.input.on('pointerdown', () => input.setBlur());
 
@@ -108,11 +109,23 @@ export default class Game extends Phaser.Scene {
             console.log(players);
             infos.forEach(info => info.destroy());
             for (let i = 0; i < players.length; i++) {
+                let p = players[i];
                 infos.push(render.drawBox(450, 430 + 83 * i, 68, 68, 14, 0x5e5e5e));
-                infos.push(render.drawText(players[i].name, 600, 440 + 83 * i, '#000', 22).setFontStyle('bold'));
-                let {box, text} = render.drawTextBox(players[i].state, '#000', 20, 540, 460 + 83 * i, 120, 30, 8, 0x30e257, 3, 0);
-                infos.push(box);
-                infos.push(text);
+                infos.push(render.drawText(p.name + (p.state == '冒险中'?(p.ready ? ' ✔️' : ' ❔'):''),
+                    600, 440 + 83 * i, '#000', 22).setFontStyle('bold'));
+                if(p.id == socket.id){
+                    infos.push(render.drawBox( 540, 460 + 83 * i, 120, 30, 8,
+                        p.state == '冒险中' ? 0x30e257 : 0xdee230, 3, 0));
+                    infos.push(render.drawText(`+${p.bag}`, 570, 475 + 83 * i, '#000', 20).setFontStyle('bold'));
+                    infos.push(render.drawBox( 600, 462 + 83 * i, 56, 26, 8, 0));
+                    infos.push(render.drawText(`${p.camp}`, 628, 475 + 83 * i, '#fff', 20).setFontStyle('bold'));
+                }else{
+                    let { box, text } = render.drawTextBox(p.state, '#000', 20, 540, 460 + 83 * i, 120, 30, 8,
+                    p.state == '冒险中' ? 0x30e257 : 0xdee230, 3, 0);
+                    infos.push(box);
+                    infos.push(text);
+                }
+                
             }
         });
 

@@ -12,7 +12,7 @@ class Player {
         this.name = username;
         this.bag = 0;
         this.camp = 0;
-        this.state ='冒险中';
+        this.state = '冒险中';
         this.ready = false;
     }
 }
@@ -35,13 +35,36 @@ io.on('connection', function (socket) {
     });
 
     socket.on('ready', () => {
-        players.find(player => player.id === socket.id).ready = true;
-        if(players.every(player => player.ready === true || player.state === '已返回')) {
-            players.forEach(player => player.ready = false);
-            let types = ['artifact', 'disaster', 'gem'];
-            let type = types[Math.floor(Math.random() * types.length)];
-            let id = Math.floor(Math.random() * 4) + 1;
-            io.emit('dealCards', {type, id});
+        let user = players.find(player => player.id === socket.id);
+        if (user) {
+            user.ready = true;
+            if (players.every(player => player.ready === true || player.state === '已返回')) {
+                players.forEach(player => player.ready = false);
+                let types = ['artifact', 'disaster', 'gem'];
+                let type = types[Math.floor(Math.random() * types.length)];
+                let id = Math.floor(Math.random() * 4) + 1;
+                io.emit('dealCards', { type, id });
+            }
+            io.emit('updatePlayers', players);
+        }
+        console.log(players);
+    });
+
+    socket.on('back', () => {
+        let user = players.find(player => player.id === socket.id);
+        if (user) {
+            user.ready = false;
+            user.state = '已返回';
+            user.camp += user.bag;
+            user.bag = 0;
+            if (players.every(player => player.ready === true || player.state === '已返回')) {
+                players.forEach(player => player.ready = false);
+                let types = ['artifact', 'disaster', 'gem'];
+                let type = types[Math.floor(Math.random() * types.length)];
+                let id = Math.floor(Math.random() * 4) + 1;
+                io.emit('dealCards', { type, id });
+            }
+            io.emit('updatePlayers', players);
         }
         console.log(players);
     });
@@ -56,7 +79,7 @@ io.on('connection', function (socket) {
     socket.on('sendMessage', ({ user, msg }) => {
         console.log(user + ': ' + msg);
         msgNum++;
-        io.emit('sendMessage', {user, msg});
+        io.emit('sendMessage', { user, msg });
     });
 });
 
