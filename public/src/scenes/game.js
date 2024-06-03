@@ -21,7 +21,7 @@ export default class Game extends Phaser.Scene {
             for (let i = 1; i <= n; i++)
                 self.load.image(`${dir}-${i}`, `assets/${dir}/${i}.jpg`);
         }
-        loadImages('artifact', 6);
+        loadImages('artifact', 5);
         loadImages('disaster', 5);
         loadImages('gem', 4);
     }
@@ -39,7 +39,7 @@ export default class Game extends Phaser.Scene {
 
         self.add.graphics().lineStyle(1, 0xff0000, 1).strokeRect(0, 0, 1600, 800);
 
-        socket.on('dealCards', ({ type, id }) => {
+        socket.on('drawCard', ({ type, id }) => {
             let card = new Card(self, { type: type, id: id });
             card.render(35, 27);
         })
@@ -47,14 +47,15 @@ export default class Game extends Phaser.Scene {
         let { box, text } = render.drawTextBox("冒险翻开的卡", '#000', 28, 35, 27, 207, 295, 3, 0xa2a2a2);
         // text.setDepth(1);
 
-        let { boxA, textA } = render.drawTextBox("陷阱A", '#000', 28, 264, 27, 119, 53, 3, 0xd43a3a);
-        let { boxB, textB } = render.drawTextBox("陷阱B", '#000', 28, 264, 86, 119, 53, 3, 0xcecece);
-        let { boxC, textC } = render.drawTextBox("陷阱C", '#000', 28, 264, 146, 119, 53, 3, 0xcecece);
-        let { boxD, textD } = render.drawTextBox("陷阱D", '#000', 28, 264, 205, 119, 53, 3, 0xcecece);
-        let { boxE, textE } = render.drawTextBox("陷阱E", '#000', 28, 264, 265, 119, 53, 3, 0xcecece);
+        let disaster = []
+        disaster.push(render.drawTextBox("陷阱A", '#000', 28, 264, 27, 119, 53, 3, 0xd43a3a));
+        disaster.push(render.drawTextBox("陷阱B", '#000', 28, 264, 86, 119, 53, 3, 0xcecece));
+        disaster.push(render.drawTextBox("陷阱C", '#000', 28, 264, 146, 119, 53, 3, 0xcecece));
+        disaster.push(render.drawTextBox("陷阱D", '#000', 28, 264, 205, 119, 53, 3, 0xcecece));
+        disaster.push(render.drawTextBox("陷阱E", '#000', 28, 264, 265, 119, 53, 3, 0xcecece));
 
 
-        render.drawTextBox("公共区", '#000', 32, 35, 337, 348, 203, 3, 0xd1f3db);
+        // render.drawTextBox("公共区", '#000', 32, 35, 337, 348, 203, 3, 0xd1f3db);
         render.drawBox(435, 27, 574, 365, 7, 0xc5e8fb);
         render.drawTextBox("冒险日志", '#fff', 26, 449, 34, 546, 55, 7, 0x1a4baa);
         render.drawBox(435, 413, 252, 365, 7, 0xd9d9d9);
@@ -91,42 +92,59 @@ export default class Game extends Phaser.Scene {
             }
         })
 
-        let msgNum = 0;
-        socket.on('sendMessage', ({ user, msg }) => {
-            console.log(user + ': ' + msg);
-            if (user === self.username) {
+        let msgs = [];
+        socket.on('updateMessage', (messages) => {
+            console.log(messages);
+            msgs.forEach(msg => msg.destroy());
+
+            if (messages[messages.length-1].user === self.username) {
                 input.text = '';
                 message = '';
             }
-            render.drawBox(1094, 47 + 93 * msgNum, 54, 53, 10, 0x373737);
-            render.drawText(user, 1120, 113 + 93 * msgNum, '#000', 20).setFontStyle('bold');
-            render.drawTextBox(msg, '#fff', 24, 1172, 47 + 93 * msgNum, 206, 53, 10, 0x4b4b4b);
-            msgNum++;
+
+            messages.forEach((pair, i) => {
+                let {user, msg} = pair;
+                msgs.push(render.drawBox(1094, 47 + 93 * i, 54, 53, 10, 0x373737));
+                msgs.push(render.drawText(user, 1120, 113 + 93 * i, '#000', 20).setFontStyle('bold'));
+                let {box, text} = render.drawTextBox(msg, '#fff', 24, 1172, 47 + 93 * i, 300, 53, 10, 0x4b4b4b);
+                msgs.push(box);
+                msgs.push(text);
+            });
         });
 
         let infos = [];
-        socket.on('updatePlayers', (players) => {
-            console.log(players);
+        let logs = [];
+        socket.on('updateInfo', ({ players, states }) => {
+            console.log(players, states);
             infos.forEach(info => info.destroy());
             for (let i = 0; i < players.length; i++) {
                 let p = players[i];
                 infos.push(render.drawBox(450, 430 + 83 * i, 68, 68, 14, 0x5e5e5e));
-                infos.push(render.drawText(p.name + (p.state == '冒险中'?(p.ready ? ' ✔️' : ' ❔'):''),
+                infos.push(render.drawText(p.name + (p.state == '冒险中' ? (p.ready ? ' ✔️' : ' ❔') : ''),
                     600, 440 + 83 * i, '#000', 22).setFontStyle('bold'));
-                if(p.id == socket.id){
-                    infos.push(render.drawBox( 540, 460 + 83 * i, 120, 30, 8,
+                if (p.id == socket.id) {
+                    infos.push(render.drawBox(540, 460 + 83 * i, 120, 30, 8,
                         p.state == '冒险中' ? 0x30e257 : 0xdee230, 3, 0));
                     infos.push(render.drawText(`+${p.bag}`, 570, 475 + 83 * i, '#000', 20).setFontStyle('bold'));
-                    infos.push(render.drawBox( 600, 462 + 83 * i, 56, 26, 8, 0));
+                    infos.push(render.drawBox(600, 462 + 83 * i, 56, 26, 8, 0));
                     infos.push(render.drawText(`${p.camp}`, 628, 475 + 83 * i, '#fff', 20).setFontStyle('bold'));
-                }else{
+                } else {
                     let { box, text } = render.drawTextBox(p.state, '#000', 20, 540, 460 + 83 * i, 120, 30, 8,
-                    p.state == '冒险中' ? 0x30e257 : 0xdee230, 3, 0);
+                        p.state == '冒险中' ? 0x30e257 : 0xdee230, 3, 0);
                     infos.push(box);
                     infos.push(text);
                 }
-                
             }
+
+            // 35, 337, 348, 203
+            infos.push(render.drawText(`第${states.round}轮 第${states.day}天`, 200, 400, '#000', 32).setFontStyle('bold'));
+            infos.push(render.drawText(`宝石区: ${states.gem}`, 200, 450, '#000', 28).setFontStyle('bold'));
+            infos.push(render.drawText(`神器区: ${states.artifact.reduce((val, art) => val + art.value, 0)}`, 200, 500, '#000', 28).setFontStyle('bold'));
+
+
+            infos.push(render.drawText(`第${states.round}轮 第${states.day}天`, 200, 400, '#000', 32));
+
+
         });
 
     }
