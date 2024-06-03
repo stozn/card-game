@@ -96,8 +96,8 @@ export default class Game extends Phaser.Scene {
         socket.on('updateMessage', (messages) => {
             console.log(messages);
             msgs.forEach(msg => msg.destroy());
-
-            if (messages[messages.length-1].user === self.username) {
+            let n = messages.length;
+            if (n && messages[n-1].user === self.username) {
                 input.text = '';
                 message = '';
             }
@@ -106,14 +106,14 @@ export default class Game extends Phaser.Scene {
                 let {user, msg} = pair;
                 msgs.push(render.drawBox(1094, 47 + 93 * i, 54, 53, 10, 0x373737));
                 msgs.push(render.drawText(user, 1120, 113 + 93 * i, '#000', 20).setFontStyle('bold'));
-                let {box, text} = render.drawTextBox(msg, '#fff', 24, 1172, 47 + 93 * i, 300, 53, 10, 0x4b4b4b);
+                let {box, text} = render.drawTextBox(msg, '#fff', 20, 1172, 47 + 93 * i, 300, 53, 10, 0x4b4b4b);
+                text.setFontStyle('normal');
                 msgs.push(box);
                 msgs.push(text);
             });
         });
 
         let infos = [];
-        let logs = [];
         socket.on('updateInfo', ({ players, states }) => {
             console.log(players, states);
             infos.forEach(info => info.destroy());
@@ -136,17 +136,22 @@ export default class Game extends Phaser.Scene {
                 }
             }
 
-            // 35, 337, 348, 203
             infos.push(render.drawText(`第${states.round}轮 第${states.day}天`, 200, 400, '#000', 32).setFontStyle('bold'));
             infos.push(render.drawText(`宝石区: ${states.gem}`, 200, 450, '#000', 28).setFontStyle('bold'));
             infos.push(render.drawText(`神器区: ${states.artifact.reduce((val, art) => val + art.value, 0)}`, 200, 500, '#000', 28).setFontStyle('bold'));
 
-
             infos.push(render.drawText(`第${states.round}轮 第${states.day}天`, 200, 400, '#000', 32));
-
-
         });
 
+        let records = [];
+        socket.on('updateLog', (logs) => {
+            console.log(logs);
+            records.forEach(msg => msg.destroy());
+
+            logs.forEach((log, i) => { // 26, 449, 34, 546, 55
+                records.push(render.drawText(log, 450, 100 + 24 * i, '#000', 20).setOrigin(0, 0));
+            });
+        });
     }
 
     update() {

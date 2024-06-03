@@ -22,7 +22,13 @@ export default class Login extends Phaser.Scene {
         let username = '玩家' + Math.floor(Math.random() * 1000).toString();
         render.drawInput(750, 200, 200, 60, 28).on('textchange', (input) => {
             username = input.text;
-        });
+        }).on('keydown', function (input, e) {
+            if (e.key === 'Enter') {
+                console.log('你的用户名为 ' + username);
+                self.scene.start('Game', { username });
+                self.visible = false;
+            }
+        })
 
         render.drawTextBox("登录", '#000', 32, 800, 300, 100, 60, 13, 0xffea2b, null, null, 'pointerdown', () => {
             console.log('你的用户名为 ' + username);

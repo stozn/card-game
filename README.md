@@ -1,6 +1,6 @@
-# 联机卡牌游戏Demo
+# 印加宝藏网页版
 
-这是一个基于 Phaser 和 Socket.IO 构建的在线卡牌游戏的简单Demo。
+这是一个基于 Phaser 和 Socket.IO 构建的在线印加宝藏游戏。
 
 ## 快速开始
 
