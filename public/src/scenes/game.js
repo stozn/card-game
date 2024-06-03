@@ -1,7 +1,6 @@
-import socket from "../utils/socket.js";
 import Render from "../utils/render.js";
-import Dealer from "../gameobjects/dealer.js";
-import Player from "../gameobjects/player.js";
+import Card from "../gameobjects/card.js";
+// import Player from "../gameobjects/player.js";
 
 export default class Game extends Phaser.Scene {
     constructor() {
@@ -10,8 +9,8 @@ export default class Game extends Phaser.Scene {
         });
     }
 
-    init({username}) {
-        this.username = username;
+    init({ username }) {
+        this.username = username || '玩家' + Math.floor(Math.random() * 1000).toString();
         console.log('你ui ' + username);
     }
 
@@ -29,35 +28,30 @@ export default class Game extends Phaser.Scene {
 
     create() {
         let self = this;
+        const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Connected!');
+        });
+        socket.emit("login", self.username);
         self.add.image(864, 641, 'camp');
-        self.dealer = new Dealer(self);
         let render = new Render(self);
-        self.players = [];
 
         self.add.graphics().lineStyle(1, 0xff0000, 1).strokeRect(0, 0, 1600, 800);
 
-        socket.on('addPlayer', (username) => {
-            console.log('新玩家加入' + username);
-            let player = new Player(self, username);
-            self.players.push(player);
-            // player.render(100, 100);
-        });
-
-
-        socket.on('dealCards', () => {
-            console.log('dealCards');
-            self.dealer.dealCards();
-            // self.dealText.disableInteractive();
+        socket.on('dealCards', ({ type, id }) => {
+            let card = new Card(self, { type: type, id: id });
+            card.render(35, 27);
         })
 
-        let { box, text } = render.drawTextBox("冒险翻开的卡", '#000', 32, 35, 27, 207, 295, 3, 0xa2a2a2);
+        let { box, text } = render.drawTextBox("冒险翻开的卡", '#000', 28, 35, 27, 207, 295, 3, 0xa2a2a2);
         // text.setDepth(1);
 
-        render.drawTextBox("陷阱A", '#000', 32, 264, 27, 119, 53, 3, 0xd43a3a);
-        render.drawTextBox("陷阱B", '#000', 32, 264, 86, 119, 53, 3, 0xcececce);
-        render.drawTextBox("陷阱C", '#000', 32, 264, 146, 119, 53, 3, 0xcececce);
-        render.drawTextBox("陷阱D", '#000', 32, 264, 205, 119, 53, 3, 0xd43a3a);
-        render.drawTextBox("陷阱E", '#000', 32, 264, 265, 119, 53, 3, 0xcececce);
+        render.drawTextBox("陷阱A", '#000', 28, 264, 27, 119, 53, 3, 0xd43a3a);
+        render.drawTextBox("陷阱B", '#000', 28, 264, 86, 119, 53, 3, 0xcecece);
+        render.drawTextBox("陷阱C", '#000', 28, 264, 146, 119, 53, 3, 0xcecece);
+        render.drawTextBox("陷阱D", '#000', 28, 264, 205, 119, 53, 3, 0xd43a3a);
+        render.drawTextBox("陷阱E", '#000', 28, 264, 265, 119, 53, 3, 0xcecece);
 
         render.drawTextBox("公共区", '#000', 32, 35, 337, 348, 203, 3, 0xd1f3db);
         render.drawBox(435, 27, 574, 365, 7, 0xc5e8fb);
@@ -66,43 +60,60 @@ export default class Game extends Phaser.Scene {
         render.drawBox(704, 413, 305, 65, 4.5, 0xd9d9d9);
         render.drawBox(1060, 27, 513, 747, 11, 0xd9d9d9);
 
-        render.drawTextBox("继续冒险", '#000', 32, 36, 555, 348, 138, 13, 0xffea2b, 'pointerdown', () => {
-            socket.emit("dealCards");
-            console.log("dksklfsd");
+        render.drawTextBox("继续冒险", '#000', 32, 36, 555, 348, 138, 13, 0xffea2b, null, null, 'pointerdown', () => {
+            socket.emit("ready");
+            console.log("冒险");
         });
 
-        render.drawTextBox("溜了", '#fff', 32, 36, 705, 348, 71, 13, 0x2a2525, 'pointerdown', () => {
+        render.drawTextBox("溜了", '#fff', 32, 36, 705, 348, 71, 13, 0x2a2525, null, null, 'pointerdown', () => {
             socket.emit("back");
+            console.log("溜了");
         });
 
         let message = '';
-        let input = render.drawInput(1094, 632, 446, 125, 28, 'textarea').on('textchange', (input) => {
+        let input = render.drawInput(1094, 695, 400, 63, 22, 'textarea').on('textchange', (input) => {
             message = input.text;
         });
 
-        self.input.on('pointerdown', function () {
-            input.setBlur();
-        })
+        let sendMessage = () => {
+            socket.emit("sendMessage", { user: self.username, msg: message });
+            console.log("send " + self.username + ':' + message);
+        }
+
+        render.drawTextBox("发送", '#000', 28, 1500, 705, 70, 50, 13, 0x79df49, null, null, 'pointerdown', sendMessage);
+
+        self.input.on('pointerdown', () => input.setBlur());
 
         input.on('keydown', function (input, e) {
             if (e.key === 'Enter') {
-                input.setBlur();
-                socket.emit("sendMessage", { user: self.username, msg: message });
-                console.log("send " + self.username + ':' + message);
-                input.text = '';
-                message = '';
+                sendMessage();
             }
         })
 
         let msgNum = 0;
-        socket.on('sendMessage', (info) => {
-            console.log(info);
-            let user = info.user;
-            let msg = info.msg;
+        socket.on('sendMessage', ({ user, msg }) => {
+            console.log(user + ': ' + msg);
+            if (user === self.username) {
+                input.text = '';
+                message = '';
+            }
             render.drawBox(1094, 47 + 93 * msgNum, 54, 53, 10, 0x373737);
             render.drawText(user, 1120, 113 + 93 * msgNum, '#000', 20).setFontStyle('bold');
             render.drawTextBox(msg, '#fff', 24, 1172, 47 + 93 * msgNum, 206, 53, 10, 0x4b4b4b);
             msgNum++;
+        });
+
+        let infos = [];
+        socket.on('updatePlayers', (players) => {
+            console.log(players);
+            infos.forEach(info => info.destroy());
+            for (let i = 0; i < players.length; i++) {
+                infos.push(render.drawBox(450, 430 + 83 * i, 68, 68, 14, 0x5e5e5e));
+                infos.push(render.drawText(players[i].name, 600, 440 + 83 * i, '#000', 22).setFontStyle('bold'));
+                let {box, text} = render.drawTextBox(players[i].state, '#000', 20, 540, 460 + 83 * i, 120, 30, 8, 0x30e257, 3, 0);
+                infos.push(box);
+                infos.push(text);
+            }
         });
 
     }

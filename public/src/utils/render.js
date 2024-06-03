@@ -13,16 +13,19 @@ export default class Render {
         return text;
     }
 
-    drawBox(x, y, w, h, r, color) {
+    drawBox(x, y, w, h, r, color, linew=null, linec=null) {
         let box = this.scene.add.graphics();
+        if (linew) {
+            box.lineStyle(linew, linec);
+        }
         box.fillStyle(color, 1);
         box.strokeRoundedRect(x, y, w, h, r);
         box.fillRoundedRect(x, y, w, h, r);
         return box;
     }
 
-    drawTextBox(cont, fontColor, fontsize, x, y, w, h, r, color, event = null, callback = null) {
-        let box = this.drawBox(x, y, w, h, r, color);
+    drawTextBox(cont, fontColor, fontsize, x, y, w, h, r, color, linew=null, linec=null, event = null, callback = null) {
+        let box = this.drawBox(x, y, w, h, r, color, linew, linec);
         let text = this.drawText(cont, x + w / 2, y + h / 2, fontColor, fontsize).setFontStyle('bold');
         if (event) {
             box.setInteractive(new Phaser.Geom.Rectangle(x, y, w, h), Phaser.Geom.Rectangle.Contains).on(event, callback);

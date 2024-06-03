@@ -1,4 +1,3 @@
-import socket from "../utils/socket.js";
 import Render from "../utils/render.js";
 
 export default class Login extends Phaser.Scene {
@@ -25,10 +24,9 @@ export default class Login extends Phaser.Scene {
             username = input.text;
         });
 
-        render.drawTextBox("登录", '#000', 32, 800, 300, 100, 60, 13, 0xffea2b, 'pointerdown', () => {
-            socket.emit("login", username);
+        render.drawTextBox("登录", '#000', 32, 800, 300, 100, 60, 13, 0xffea2b, null, null, 'pointerdown', () => {
             console.log('你的用户名为 ' + username);
-            self.scene.start('Game', {username});
+            self.scene.start('Game', { username });
             self.visible = false;
         });
     }
