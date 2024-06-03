@@ -14,7 +14,7 @@ export default class Dealer {
             return array[rand(array.length)];
         }
         
-        let curCard = new Card(this.scene, {type: sample(this.cardTypes), id: rand(6) + 1, value: rand(6)});
-        curCard.render(1000, 375);
+        let curCard = new Card(this.scene, {type: sample(this.cardTypes), id: rand(4) + 1, value: rand(6)});
+        curCard.render(35, 27);
     }
 }

@@ -2,8 +2,6 @@
 
 这是一个基于 Phaser 和 Socket.IO 构建的在线卡牌游戏的简单Demo。
 
-基于 [multiplayer-card-project](https://github.com/sominator/multiplayer-card-project) 修改
-
 ## 快速开始
 
 ```bash

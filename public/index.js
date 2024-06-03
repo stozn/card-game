@@ -1,12 +1,18 @@
-import Game from "./src/game.js"
+import Game from "./src/scenes/game.js"
+import Login from "./src/scenes/login.js"
 
 const config = {
     type: Phaser.AUTO,
     width: 1600,
     height: 900,
+    parent: document.body,
     backgroundColor: '#ffffff',
-    scaleMode: 1,
+    scaleMode: Phaser.Scale.ScaleModes.FIT,
+    dom: {
+        createContainer: true
+    },
     scene: [
+        Login,
         Game
     ]
 };

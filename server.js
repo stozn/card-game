@@ -18,7 +18,9 @@ io.on('connection', function (socket) {
     console.log('A user connected: ' + socket.id);
 
     players.push(socket.id);
-    io.emit('addPlayer', socket.id);
+    socket.on('login', function (username) {
+        io.emit('addPlayer', username);
+    });
 
     socket.on('dealCards', function () {
         io.emit('dealCards');
@@ -27,6 +29,13 @@ io.on('connection', function (socket) {
     socket.on('disconnect', function () {
         console.log('A user disconnected: ' + socket.id);
         players = players.filter(player => player !== socket.id);
+    });
+
+    let msgNum = 0;
+    socket.on('sendMessage', ({ user, msg }) => {
+        console.log(user + ': ' + msg);
+        msgNum++;
+        io.emit('sendMessage', {user, msg});
     });
 });
 
