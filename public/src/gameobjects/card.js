@@ -7,7 +7,7 @@ export default class Card {
             this.value = config.value;
         }
         this.render = (x, y, w = 207, h = 295) => {
-            let card = scene.add.image(x + 103.5, y + 147.5, this.img).setScale(0.7, 0.7).setDepth(2);
+            let card = scene.add.image(x + 103.5, y + 147.5, this.img).setScale(0.7, 0.7);
             return card;
         }
     }

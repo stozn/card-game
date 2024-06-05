@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 })
 
 let players = [];
-let states = { round: 1, day: 1, gem: 0, artifact: [], disaster: [0, 0, 0, 0, 0], card: null };
+let states = { round: 1, day: 1, gem: 0, artifact: [], disaster: [0, 0, 0, 0, 0], over: false };
 let messages = [];
 let logs = [];
 
@@ -66,6 +66,10 @@ io.on('connection', function (socket) {
             p.ready = false;
             p.state = '冒险中';
         });
+        if (states.round == 5) {
+            states.over = true;
+            return log;
+        }
         states.round++;
         states.day = 1;
         states.gem = 0;
@@ -101,6 +105,7 @@ io.on('connection', function (socket) {
                 curAllCards.splice(curAllCards.findIndex(c => c.id === card.id && c.type === 'disaster'), 1);
                 log += `触发了陷阱【${card.name}】，`;
                 log = over(log);
+                states.disaster.push(card.id);
             } else log += `感应到陷阱【${card.name}】的气息，接下来要小心了！ `;
         }
         return log;
@@ -126,7 +131,7 @@ io.on('connection', function (socket) {
                     states.artifact = [];
                 }// else log += bn + `名玩家溜了, 每人带走了${states.gem / bn}宝石, `;
                 log += bn + '名玩家溜了，';
-            }   
+            }
 
             states.day++;
             players.forEach(p => p.ready = false);
@@ -135,10 +140,23 @@ io.on('connection', function (socket) {
             else log = drawCard(log);
 
             logs.push(log);
+            if(states.over) logs.push('游戏结束');
             if (logs.length > 12) logs = logs.slice(-12);
             io.emit('updateLog', logs);
         }
         io.emit('updateInfo', { players, states: states });
+        if (states.over) {
+            players.forEach(p => {
+                p.bag = 0;
+                p.camp = 0;
+                p.state = '冒险中';
+                p.ready = false;
+                p.choice = '冒险';
+            });
+            states = { round: 1, day: 1, gem: 0, artifact: [], disaster: [0, 0, 0, 0, 0], over: false };
+            messages = [];
+            logs = [];
+        }
     }
 
     socket.on('ready', () => {
@@ -164,7 +182,7 @@ io.on('connection', function (socket) {
         players = players.filter(player => player.id !== socket.id);
         io.emit('updateInfo', { players, states: states });
         if (players.length == 0) {
-            states = { round: 1, day: 1, gem: 0, artifact: [], disaster: [0, 0, 0, 0, 0], card: null };
+            states = { round: 1, day: 1, gem: 0, artifact: [], disaster: [0, 0, 0, 0, 0], over: false };
             messages = [];
             logs = [];
             curAllCards = allCards.slice();

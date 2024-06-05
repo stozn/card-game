@@ -45,15 +45,7 @@ export default class Game extends Phaser.Scene {
         })
 
         let { box, text } = render.drawTextBox("冒险翻开的卡", '#000', 28, 35, 27, 207, 295, 3, 0xa2a2a2);
-        // text.setDepth(1);
-
-        let disaster = []
-        disaster.push(render.drawTextBox("陷阱A", '#000', 28, 264, 27, 119, 53, 3, 0xd43a3a));
-        disaster.push(render.drawTextBox("陷阱B", '#000', 28, 264, 86, 119, 53, 3, 0xcecece));
-        disaster.push(render.drawTextBox("陷阱C", '#000', 28, 264, 146, 119, 53, 3, 0xcecece));
-        disaster.push(render.drawTextBox("陷阱D", '#000', 28, 264, 205, 119, 53, 3, 0xcecece));
-        disaster.push(render.drawTextBox("陷阱E", '#000', 28, 264, 265, 119, 53, 3, 0xcecece));
-
+        // text.setDepth(1);        
 
         // render.drawTextBox("公共区", '#000', 32, 35, 337, 348, 203, 3, 0xd1f3db);
         render.drawBox(435, 27, 574, 365, 7, 0xc5e8fb);
@@ -97,16 +89,16 @@ export default class Game extends Phaser.Scene {
             console.log(messages);
             msgs.forEach(msg => msg.destroy());
             let n = messages.length;
-            if (n && messages[n-1].user === self.username) {
+            if (n && messages[n - 1].user === self.username) {
                 input.text = '';
                 message = '';
             }
 
             messages.forEach((pair, i) => {
-                let {user, msg} = pair;
+                let { user, msg } = pair;
                 msgs.push(render.drawBox(1094, 47 + 93 * i, 54, 53, 10, 0x373737));
                 msgs.push(render.drawText(user, 1120, 113 + 93 * i, '#000', 20).setFontStyle('bold'));
-                let {box, text} = render.drawTextBox(msg, '#fff', 20, 1172, 47 + 93 * i, 300, 53, 10, 0x4b4b4b);
+                let { box, text } = render.drawTextBox(msg, '#fff', 20, 1172, 47 + 93 * i, 300, 53, 10, 0x4b4b4b);
                 text.setFontStyle('normal');
                 msgs.push(box);
                 msgs.push(text);
@@ -117,12 +109,21 @@ export default class Game extends Phaser.Scene {
         socket.on('updateInfo', ({ players, states }) => {
             console.log(players, states);
             infos.forEach(info => info.destroy());
+            let dis = ['金', '木', '水', '火', '土'];
+            states.disaster.forEach((id, i) => {
+                let {box, text} = render.drawTextBox("陷阱" + dis[i], '#000', 28, 264, 27 + i * 60, 119, 53, 3, id ? 0xd43a3a : 0xcecece);
+                infos.push(box);
+                infos.push(text);
+            });
+            if (states.over) {
+                render.drawTextBox("游戏结束！", '#f00', 28, 35, 27, 207, 295, 3, 0xa2a2a2);
+            }
             for (let i = 0; i < players.length; i++) {
                 let p = players[i];
                 infos.push(render.drawBox(450, 430 + 83 * i, 68, 68, 14, 0x5e5e5e));
                 infos.push(render.drawText(p.name + (p.state == '冒险中' ? (p.ready ? ' ✔️' : ' ❔') : ''),
                     600, 440 + 83 * i, '#000', 22).setFontStyle('bold'));
-                if (p.id == socket.id) {
+                if (p.id == socket.id || states.over) {
                     infos.push(render.drawBox(540, 460 + 83 * i, 120, 30, 8,
                         p.state == '冒险中' ? 0x30e257 : 0xdee230, 3, 0));
                     infos.push(render.drawText(`+${p.bag}`, 570, 475 + 83 * i, '#000', 20).setFontStyle('bold'));
